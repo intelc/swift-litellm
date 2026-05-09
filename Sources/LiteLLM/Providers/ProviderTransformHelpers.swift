@@ -90,6 +90,20 @@ func commonHeaders(contentType: String = "application/json", extra: [String: Str
     return headers
 }
 
+func normalizedUsage(promptTokens: Int?, completionTokens: Int?, totalTokens: Int?) -> Usage {
+    var prompt = promptTokens
+    var completion = completionTokens
+    if let totalTokens {
+        if prompt == nil, let completion {
+            prompt = max(0, totalTokens - completion)
+        }
+        if completion == nil, let prompt {
+            completion = max(0, totalTokens - prompt)
+        }
+    }
+    return Usage(promptTokens: prompt ?? 0, completionTokens: completion ?? 0, totalTokens: totalTokens)
+}
+
 func ssePayload(from line: String) -> String? {
     let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return nil }

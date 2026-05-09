@@ -2,10 +2,14 @@ import Foundation
 
 struct AnthropicAdapter: ProviderAdapter {
     let baseURL: URL
-    let apiKey: String
+    let apiKey: String?
     let model: String
 
     var providerName: String { "anthropic" }
+
+    func withAPIKey(_ apiKey: String) -> any ProviderAdapter {
+        AnthropicAdapter(baseURL: baseURL, apiKey: apiKey, model: model)
+    }
 
     func makeRequest(_ request: ChatRequest, stream: Bool) throws -> ProviderHTTPRequest {
         let system = request.messages
@@ -40,6 +44,9 @@ struct AnthropicAdapter: ProviderAdapter {
         }
         body.mergeExtra(request.extraBody)
 
+        guard let apiKey, !apiKey.isEmpty else {
+            throw LiteLLMError.invalidRequest("Anthropic API key is required")
+        }
         var headers = commonHeaders(extra: request.extraHeaders)
         headers["x-api-key"] = apiKey
         headers["anthropic-version"] = "2023-06-01"

@@ -4,8 +4,18 @@ struct OpenAICompatibleAdapter: ProviderAdapter {
     let baseURL: URL
     let apiKey: String?
     let model: String
+    let providerName: String
 
-    var providerName: String { "openai-compatible" }
+    init(baseURL: URL, apiKey: String?, model: String, providerName: String = "openai-compatible") {
+        self.baseURL = baseURL
+        self.apiKey = apiKey
+        self.model = model
+        self.providerName = providerName
+    }
+
+    func withAPIKey(_ apiKey: String) -> any ProviderAdapter {
+        OpenAICompatibleAdapter(baseURL: baseURL, apiKey: apiKey, model: model, providerName: providerName)
+    }
 
     func makeRequest(_ request: ChatRequest, stream: Bool) throws -> ProviderHTTPRequest {
         var body: [String: JSONValue] = [
@@ -94,16 +104,34 @@ struct OpenAIMessageWire: Decodable {
 
 struct OpenAIToolCallWire: Decodable {
     let id: String?
-    let function: OpenAIFunctionCallWire
+    let index: Int?
+    let function: OpenAIFunctionCallWire?
 
     func normalized() -> ToolCall {
-        ToolCall(id: id, name: function.name, arguments: function.arguments)
+        ToolCall(id: id, name: function?.name ?? "", arguments: function?.arguments ?? "")
     }
 }
 
-struct OpenAIFunctionCallWire: Decodable {
-    let name: String
-    let arguments: String
+struct OpenAIFunctionCallWire: Decodable, Equatable {
+    let name: String?
+    let arguments: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case name
+        case arguments
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
+        if let stringArguments = try? container.decodeIfPresent(String.self, forKey: .arguments) {
+            arguments = stringArguments
+        } else if let jsonArguments = try? container.decodeIfPresent(JSONValue.self, forKey: .arguments) {
+            arguments = String(data: (try? JSONEncoder().encode(jsonArguments)) ?? Data("{}".utf8), encoding: .utf8) ?? "{}"
+        } else {
+            arguments = nil
+        }
+    }
 }
 
 struct OpenAIUsage: Decodable {
@@ -112,7 +140,7 @@ struct OpenAIUsage: Decodable {
     let totalTokens: Int?
 
     func normalized() -> Usage {
-        Usage(promptTokens: promptTokens ?? 0, completionTokens: completionTokens ?? 0, totalTokens: totalTokens)
+        normalizedUsage(promptTokens: promptTokens, completionTokens: completionTokens, totalTokens: totalTokens)
     }
 }
 

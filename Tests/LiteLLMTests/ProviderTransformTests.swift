@@ -38,6 +38,29 @@ struct ProviderTransformTests {
         #expect(try bodyJSON(providerRequest) == decodedFixture("anthropic_basic_request"))
     }
 
+    @Test func anthropicRequestMapsToolConversation() throws {
+        let adapter = AnthropicAdapter(
+            baseURL: URL(string: "https://api.anthropic.com")!,
+            apiKey: "anthropic-key",
+            model: "claude-sonnet-4-5"
+        )
+        let request = ChatRequest(
+            messages: [
+                .user("Weather?"),
+                LLMMessage(
+                    role: .assistant,
+                    toolCalls: [ToolCall(id: "toolu_1", name: "get_weather", arguments: "{\"city\":\"SF\"}")]
+                ),
+                LLMMessage(role: .tool, content: .text("{\"temp\":58}"), toolCallID: "toolu_1"),
+            ],
+            tools: [weatherTool]
+        )
+
+        let providerRequest = try adapter.makeRequest(request, stream: false)
+
+        #expect(try bodyJSON(providerRequest) == decodedFixture("anthropic_tool_request"))
+    }
+
     @Test func geminiRequestMapsSystemAndGenerationConfig() throws {
         let adapter = GeminiAdapter(
             baseURL: URL(string: "https://generativelanguage.googleapis.com")!,
@@ -65,6 +88,34 @@ struct ProviderTransformTests {
         #expect(body["generation_config"] != nil)
     }
 
+    @Test func geminiRequestMapsToolConversationAndJsonSchema() throws {
+        let adapter = GeminiAdapter(
+            baseURL: URL(string: "https://generativelanguage.googleapis.com")!,
+            apiKey: "gemini-key",
+            model: "gemini-2.5-pro"
+        )
+        let request = ChatRequest(
+            messages: [
+                .user("Weather?"),
+                LLMMessage(
+                    role: .assistant,
+                    toolCalls: [ToolCall(name: "get_weather", arguments: "{\"city\":\"SF\"}")]
+                ),
+                LLMMessage(role: .tool, content: .text("{\"temp\":58}"), toolCallID: "get_weather"),
+            ],
+            tools: [weatherTool],
+            responseFormat: .jsonSchema(
+                name: "weather_answer",
+                schema: ["type": "object", "properties": ["answer": ["type": "string"]]],
+                strict: true
+            )
+        )
+
+        let providerRequest = try adapter.makeRequest(request, stream: false)
+
+        #expect(try bodyJSON(providerRequest) == decodedFixture("gemini_tool_request"))
+    }
+
     @Test func ollamaRequestMapsDeveloperToSystemAndJsonMode() throws {
         let adapter = OllamaAdapter(
             baseURL: URL(string: "http://localhost:11434")!,
@@ -86,5 +137,45 @@ struct ProviderTransformTests {
         #expect(body["model"] == "llama3.2")
         #expect(body["stream"] == true)
         #expect(body["format"] == "json")
+    }
+
+    @Test func ollamaRequestMapsToolConversation() throws {
+        let adapter = OllamaAdapter(
+            baseURL: URL(string: "http://localhost:11434")!,
+            model: "llama3.2"
+        )
+        let request = ChatRequest(
+            messages: [
+                .developer("Be concise."),
+                .user("Weather?"),
+                LLMMessage(
+                    role: .assistant,
+                    toolCalls: [ToolCall(id: "call_1", name: "get_weather", arguments: "{\"city\":\"SF\"}")]
+                ),
+                LLMMessage(role: .tool, content: .text("{\"temp\":58}"), toolCallID: "call_1"),
+            ],
+            tools: [weatherTool],
+            temperature: 0.1,
+            maxTokens: 32
+        )
+
+        let providerRequest = try adapter.makeRequest(request, stream: false)
+
+        #expect(providerRequest.url.absoluteString == "http://localhost:11434/api/chat")
+        #expect(try bodyJSON(providerRequest) == decodedFixture("ollama_tool_request"))
+    }
+
+    private var weatherTool: ToolDefinition {
+        ToolDefinition(
+            name: "get_weather",
+            description: "Get weather for a city.",
+            parameters: [
+                "type": "object",
+                "properties": [
+                    "city": ["type": "string"],
+                ],
+                "required": ["city"],
+            ]
+        )
     }
 }

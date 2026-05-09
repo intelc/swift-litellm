@@ -1,0 +1,50 @@
+{
+  "max_tokens": 1024,
+  "messages": [
+    {
+      "content": "Weather?",
+      "role": "user"
+    },
+    {
+      "content": [
+        {
+          "id": "toolu_1",
+          "input": {
+            "city": "SF"
+          },
+          "name": "get_weather",
+          "type": "tool_use"
+        }
+      ],
+      "role": "assistant"
+    },
+    {
+      "content": [
+        {
+          "content": "{\"temp\":58}",
+          "tool_use_id": "toolu_1",
+          "type": "tool_result"
+        }
+      ],
+      "role": "user"
+    }
+  ],
+  "model": "claude-sonnet-4-5",
+  "tools": [
+    {
+      "description": "Get weather for a city.",
+      "input_schema": {
+        "properties": {
+          "city": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "type": "object"
+      },
+      "name": "get_weather"
+    }
+  ]
+}

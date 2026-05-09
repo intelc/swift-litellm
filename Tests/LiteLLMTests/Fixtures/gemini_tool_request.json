@@ -1,0 +1,70 @@
+{
+  "contents": [
+    {
+      "parts": [
+        {
+          "text": "Weather?"
+        }
+      ],
+      "role": "user"
+    },
+    {
+      "parts": [
+        {
+          "function_call": {
+            "args": {
+              "city": "SF"
+            },
+            "name": "get_weather"
+          }
+        }
+      ],
+      "role": "model"
+    },
+    {
+      "parts": [
+        {
+          "function_response": {
+            "name": "get_weather",
+            "response": {
+              "temp": 58
+            }
+          }
+        }
+      ],
+      "role": "user"
+    }
+  ],
+  "generation_config": {
+    "response_mime_type": "application/json",
+    "response_schema": {
+      "properties": {
+        "answer": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "tools": [
+    {
+      "function_declarations": [
+        {
+          "description": "Get weather for a city.",
+          "name": "get_weather",
+          "parameters": {
+            "properties": {
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "city"
+            ],
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

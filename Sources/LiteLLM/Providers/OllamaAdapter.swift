@@ -5,6 +5,11 @@ struct OllamaAdapter: ProviderAdapter {
     let model: String
 
     var providerName: String { "ollama" }
+    var apiKey: String? { nil }
+
+    func withAPIKey(_ apiKey: String) -> any ProviderAdapter {
+        self
+    }
 
     func makeRequest(_ request: ChatRequest, stream: Bool) throws -> ProviderHTTPRequest {
         var body: [String: JSONValue] = [
@@ -90,7 +95,7 @@ struct OllamaMessage: Decodable {
     func normalized() -> LLMMessage {
         LLMMessage(
             role: LLMMessage.Role(rawValue: role ?? "assistant") ?? .assistant,
-            content: content.map(LLMContent.text),
+            content: content?.isEmpty == false ? content.map(LLMContent.text) : nil,
             toolCalls: toolCalls?.map { $0.normalized() }
         )
     }
