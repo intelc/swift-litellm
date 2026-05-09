@@ -1,0 +1,11 @@
+{
+  "max_tokens": 128,
+  "messages": [
+    {
+      "content": "Hello",
+      "role": "user"
+    }
+  ],
+  "model": "claude-sonnet-4-5",
+  "system": "Be concise."
+}

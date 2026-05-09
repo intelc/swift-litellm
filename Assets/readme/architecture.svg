@@ -1,0 +1,56 @@
+<svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">swift-litellm architecture</title>
+  <desc id="desc">Native Swift apps call LiteLLMClient, which routes model aliases through normalized providers to OpenAI-compatible, Anthropic, Gemini, and Ollama models.</desc>
+  <rect width="1280" height="640" rx="28" fill="#0B1020"/>
+  <rect x="1" y="1" width="1278" height="638" rx="27" stroke="#25324A" stroke-width="2"/>
+  <circle cx="1110" cy="82" r="220" fill="#1E6BFF" fill-opacity=".16"/>
+  <circle cx="215" cy="585" r="260" fill="#12B981" fill-opacity=".12"/>
+  <text x="74" y="92" fill="#F8FAFC" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="42" font-weight="760">swift-litellm</text>
+  <text x="76" y="132" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22">A tiny model router for native Swift apps</text>
+
+  <g filter="url(#shadow)">
+    <rect x="76" y="215" width="240" height="138" rx="18" fill="#111827" stroke="#334155"/>
+    <text x="106" y="266" fill="#E2E8F0" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="700">iOS / macOS app</text>
+    <text x="106" y="303" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17">async/await</text>
+    <text x="106" y="329" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17">URLSession</text>
+
+    <rect x="420" y="188" width="292" height="192" rx="20" fill="#162033" stroke="#4F80FF" stroke-width="2"/>
+    <text x="452" y="238" fill="#F8FAFC" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="26" font-weight="780">LiteLLMClient</text>
+    <text x="452" y="278" fill="#BFDBFE" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18">"smart" → Anthropic</text>
+    <text x="452" y="308" fill="#BFDBFE" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18">fallback → Gemini</text>
+    <text x="452" y="338" fill="#BFDBFE" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18">fallback → local Ollama</text>
+
+    <rect x="816" y="86" width="332" height="88" rx="17" fill="#101827" stroke="#475569"/>
+    <text x="846" y="138" fill="#E2E8F0" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="700">OpenAI-compatible</text>
+    <text x="846" y="163" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="15">OpenRouter, LiteLLM, vLLM, LM Studio</text>
+
+    <rect x="816" y="213" width="332" height="88" rx="17" fill="#101827" stroke="#475569"/>
+    <text x="846" y="265" fill="#E2E8F0" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="700">Anthropic</text>
+    <text x="846" y="290" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="15">Messages API transform</text>
+
+    <rect x="816" y="340" width="332" height="88" rx="17" fill="#101827" stroke="#475569"/>
+    <text x="846" y="392" fill="#E2E8F0" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="700">Gemini</text>
+    <text x="846" y="417" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="15">GenerateContent transform</text>
+
+    <rect x="816" y="467" width="332" height="88" rx="17" fill="#101827" stroke="#475569"/>
+    <text x="846" y="519" fill="#E2E8F0" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="700">Ollama</text>
+    <text x="846" y="544" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="15">local-first fallback</text>
+  </g>
+
+  <path d="M322 284H399" stroke="#60A5FA" stroke-width="4" stroke-linecap="round"/>
+  <path d="M389 270L405 284L389 298" stroke="#60A5FA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M717 284C763 284 765 130 805 130" stroke="#60A5FA" stroke-width="3" stroke-linecap="round"/>
+  <path d="M717 284H805" stroke="#60A5FA" stroke-width="3" stroke-linecap="round"/>
+  <path d="M717 284C763 284 765 384 805 384" stroke="#60A5FA" stroke-width="3" stroke-linecap="round"/>
+  <path d="M717 284C763 284 765 511 805 511" stroke="#60A5FA" stroke-width="3" stroke-linecap="round"/>
+
+  <rect x="76" y="452" width="594" height="86" rx="16" fill="#0F172A" stroke="#26364F"/>
+  <text x="106" y="488" fill="#E2E8F0" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="17">try await llm.chat(model: "smart", messages: [.user("Hello")])</text>
+  <text x="106" y="518" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="16">Aliases, retries, fallbacks, streaming events, and LiteLLM-derived metadata.</text>
+
+  <defs>
+    <filter id="shadow" x="40" y="56" width="1144" height="535" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity=".25"/>
+    </filter>
+  </defs>
+</svg>
