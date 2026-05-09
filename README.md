@@ -1,10 +1,35 @@
 # swift-litellm
 
-**A tiny LiteLLM-inspired model router for native Swift apps.**
+[![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange.svg)](https://www.swift.org)
+[![Platforms](https://img.shields.io/badge/platforms-iOS%2017%2B%20%7C%20macOS%2014%2B-blue.svg)](Package.swift)
+[![CI](https://github.com/intelc/swift-litellm/actions/workflows/ci.yml/badge.svg)](https://github.com/intelc/swift-litellm/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-`swift-litellm` gives iOS and macOS apps one typed chat API over OpenAI-compatible endpoints, Anthropic, Gemini, and Ollama. Configure model aliases in code, route by intent, stream normalized events, and fall back from cloud to local without turning your app into a server.
+**Model routing for native Swift apps.** Configure aliases like `"smart"` and `"local"`, stream normalized events, and fall back across OpenAI-compatible endpoints, Anthropic, Gemini, and Ollama.
 
 ![swift-litellm architecture](Assets/readme/architecture.svg)
+
+- **Aliases instead of provider lock-in:** app code calls `"smart"` or `"fast"`, not scattered provider model IDs.
+- **Cloud-first, local-fallback:** route from Anthropic or Gemini to OpenAI-compatible endpoints or local Ollama.
+- **LiteLLM-inspired, not a gateway:** no server target, no proxy process, no provider SDK dependencies.
+
+```swift
+let response = try await llm.chat(
+    model: "smart",
+    messages: [.user("Summarize this.")]
+)
+```
+
+## When To Use This
+
+| You want | Use `swift-litellm`? |
+| --- | --- |
+| A small router layer inside an iOS/macOS app | Yes |
+| User-selectable cloud/local providers | Yes |
+| OpenAI-compatible endpoint portability | Yes |
+| LiteLLM-style aliases, retries, fallbacks, and metadata | Yes |
+| A server gateway, admin UI, budgets, or virtual keys | Use LiteLLM/Bifrost/Portkey instead |
+| A broad AI app framework with middleware and agents | Consider Swift AI SDK or Conduit |
 
 ## Why This Exists
 
@@ -20,6 +45,15 @@ The Swift ecosystem has strong multi-provider SDKs too:
 > A lightweight router layer for native apps that want LiteLLM-style aliases, retries, fallbacks, normalized streaming, provider transforms, and LiteLLM-derived model metadata without running a gateway.
 
 It is not trying to be a full agent framework, a gateway, or a replacement for provider-rich SDKs. It is the small piece you put between app code and model providers when you want model portability to stay boring.
+
+## How It Compares
+
+| Project | Best For | Shape |
+| --- | --- | --- |
+| [LiteLLM](https://github.com/BerriAI/litellm) | Python apps, AI gateways, provider breadth, proxy features | Python SDK + server gateway |
+| [Swift AI SDK](https://github.com/teunlao/swift-ai-sdk) | Full Swift AI SDK surface with tools, structured outputs, middleware, and many modules | Broad provider framework |
+| [Conduit](https://github.com/christopherkarani/Conduit) | Type-safe local/cloud inference, Apple Silicon, MLX/CoreML-oriented apps | Native Swift inference framework |
+| `swift-litellm` | Lightweight model routing, aliases, fallbacks, normalized chat/streaming for native apps | Small Swift router SDK |
 
 ## Install
 
@@ -78,6 +112,30 @@ let response = try await llm.chat(
 
 print(response.message.content ?? "")
 ```
+
+## Routing And Fallbacks
+
+The main abstraction is a model alias. Your UI and features can ask for `"smart"`, while the client decides what concrete provider/model that means.
+
+```swift
+let llm = LiteLLMClient(
+    models: [
+        "smart": .anthropic(apiKey: anthropicKey, model: "claude-sonnet-4-5"),
+        "gemini": .gemini(apiKey: geminiKey, model: "gemini-2.5-pro"),
+        "fast": .openAICompatible(baseURL: openRouterURL, apiKey: openRouterKey, model: "openai/gpt-4o-mini"),
+        "local": .ollama(baseURL: ollamaURL, model: "llama3.2")
+    ],
+    fallbacks: [
+        "smart": ["gemini", "fast", "local"]
+    ]
+)
+```
+
+```text
+"smart" → Anthropic → Gemini → OpenAI-compatible → Ollama
+```
+
+That is the LiteLLM-inspired part: app code depends on a capability alias, not a single vendor endpoint.
 
 ## Streaming
 
@@ -138,6 +196,17 @@ if let call = response.message.toolCalls?.first {
 - **Normalized outputs:** one `ChatResponse`, one `StreamEvent`, one `ToolCall` shape.
 - **LiteLLM metadata:** bundled model pricing/context/provider metadata generated from LiteLLM resources.
 - **Testable transforms:** provider adapters are pure enough to fixture-test request and response parity.
+
+## Provider Matrix
+
+| Provider | Chat | Streaming | Tools | JSON mode intent | Usage | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| OpenAI-compatible | Yes | Yes | Yes | Yes | Yes | Early |
+| Anthropic | Yes | Yes | Yes | Basic | Yes | Early |
+| Gemini | Yes | Yes | Yes | Basic | Yes | Early |
+| Ollama | Yes | Yes | Basic | Basic | Basic | Early |
+
+OpenAI-compatible endpoints include services such as OpenRouter, LiteLLM proxy, vLLM, LM Studio, and any endpoint that implements `/v1/chat/completions`.
 
 ## Current Scope
 
