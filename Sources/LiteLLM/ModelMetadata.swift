@@ -14,6 +14,7 @@ public struct ModelInfo: Codable, Equatable, Sendable {
     public var supportsResponseSchema: Bool?
     public var supportsToolChoice: Bool?
     public var supportsVision: Bool?
+    public var supportsNativeStreaming: Bool?
 
     enum CodingKeys: String, CodingKey {
         case litellmProvider
@@ -29,6 +30,7 @@ public struct ModelInfo: Codable, Equatable, Sendable {
         case supportsResponseSchema
         case supportsToolChoice
         case supportsVision
+        case supportsNativeStreaming
     }
 
     public init(from decoder: Decoder) throws {
@@ -46,7 +48,18 @@ public struct ModelInfo: Codable, Equatable, Sendable {
         supportsResponseSchema = container.lossyBool(forKey: .supportsResponseSchema)
         supportsToolChoice = container.lossyBool(forKey: .supportsToolChoice)
         supportsVision = container.lossyBool(forKey: .supportsVision)
+        supportsNativeStreaming = container.lossyBool(forKey: .supportsNativeStreaming)
     }
+}
+
+public enum ModelCapability: Sendable {
+    case tools
+    case parallelTools
+    case toolChoice
+    case promptCaching
+    case responseSchema
+    case streaming
+    case vision
 }
 
 extension KeyedDecodingContainer {
@@ -82,6 +95,11 @@ public enum ModelMetadata {
         modelCostMap[model]
     }
 
+    public static func supports(_ capability: ModelCapability, model: String) -> Bool {
+        guard let info = info(for: model) else { return false }
+        return info.supports(capability)
+    }
+
     public static var upstream: LiteLLMUpstreamMetadata? {
         load("litellm-upstream", as: LiteLLMUpstreamMetadata.self)
     }
@@ -105,6 +123,27 @@ public enum ModelMetadata {
             return try JSONCoding.decoder.decode(T.self, from: data)
         } catch {
             return nil
+        }
+    }
+}
+
+public extension ModelInfo {
+    func supports(_ capability: ModelCapability) -> Bool {
+        switch capability {
+        case .tools:
+            supportsFunctionCalling == true
+        case .parallelTools:
+            supportsParallelFunctionCalling == true
+        case .toolChoice:
+            supportsToolChoice == true
+        case .promptCaching:
+            supportsPromptCaching == true
+        case .responseSchema:
+            supportsResponseSchema == true
+        case .streaming:
+            supportsNativeStreaming == true
+        case .vision:
+            supportsVision == true
         }
     }
 }

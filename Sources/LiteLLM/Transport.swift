@@ -1,25 +1,32 @@
 import Foundation
 
-struct HTTPRequest: Sendable {
-    var url: URL
-    var method: String
-    var headers: [String: String]
-    var body: Data
+public struct HTTPRequest: Sendable {
+    public var url: URL
+    public var method: String
+    public var headers: [String: String]
+    public var body: Data
+
+    public init(url: URL, method: String, headers: [String: String], body: Data) {
+        self.url = url
+        self.method = method
+        self.headers = headers
+        self.body = body
+    }
 }
 
-protocol HTTPTransport: Sendable {
+public protocol HTTPTransport: Sendable {
     func data(for request: HTTPRequest) async throws -> (Data, HTTPURLResponse)
     func bytes(for request: HTTPRequest) async throws -> (URLSession.AsyncBytes, HTTPURLResponse)
 }
 
-struct URLSessionHTTPTransport: HTTPTransport {
+public struct URLSessionHTTPTransport: HTTPTransport {
     private let session: URLSession
 
-    init(session: URLSession = .shared) {
+    public init(session: URLSession = .shared) {
         self.session = session
     }
 
-    func data(for request: HTTPRequest) async throws -> (Data, HTTPURLResponse) {
+    public func data(for request: HTTPRequest) async throws -> (Data, HTTPURLResponse) {
         let (data, response) = try await session.data(for: request.urlRequest)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw LiteLLMError.provider("Expected HTTPURLResponse")
@@ -27,7 +34,7 @@ struct URLSessionHTTPTransport: HTTPTransport {
         return (data, httpResponse)
     }
 
-    func bytes(for request: HTTPRequest) async throws -> (URLSession.AsyncBytes, HTTPURLResponse) {
+    public func bytes(for request: HTTPRequest) async throws -> (URLSession.AsyncBytes, HTTPURLResponse) {
         let (bytes, response) = try await session.bytes(for: request.urlRequest)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw LiteLLMError.provider("Expected HTTPURLResponse")

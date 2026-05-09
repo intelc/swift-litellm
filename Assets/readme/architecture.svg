@@ -1,55 +1,62 @@
 <svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">swift-litellm architecture</title>
-  <desc id="desc">Native Swift apps call LiteLLMClient, which routes model aliases through normalized providers to OpenAI-compatible, Anthropic, Gemini, and Ollama models.</desc>
+  <desc id="desc">Native Swift apps call LiteLLMClient, which routes aliases and fallbacks through a ChatProvider seam to HTTP provider adapters or local inference providers.</desc>
   <rect width="1280" height="640" rx="28" fill="#0B1020"/>
   <rect x="1" y="1" width="1278" height="638" rx="27" stroke="#25324A" stroke-width="2"/>
-  <circle cx="1110" cy="82" r="220" fill="#1E6BFF" fill-opacity=".16"/>
-  <circle cx="215" cy="585" r="260" fill="#12B981" fill-opacity=".12"/>
-  <text x="74" y="92" fill="#F8FAFC" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="42" font-weight="760">swift-litellm</text>
-  <text x="76" y="132" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22">A tiny model router for native Swift apps</text>
+
+  <text x="74" y="86" fill="#F8FAFC" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="42" font-weight="760">swift-litellm</text>
+  <text x="76" y="126" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22">Small Swift router, public provider seam, optional local inference modules</text>
 
   <g filter="url(#shadow)">
-    <rect x="76" y="215" width="240" height="138" rx="18" fill="#111827" stroke="#334155"/>
-    <text x="106" y="266" fill="#E2E8F0" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="24" font-weight="700">iOS / macOS app</text>
-    <text x="106" y="303" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17">async/await</text>
-    <text x="106" y="329" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17">URLSession</text>
+    <rect x="76" y="202" width="226" height="128" rx="14" fill="#111827" stroke="#334155"/>
+    <text x="106" y="252" fill="#E2E8F0" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="23" font-weight="700">iOS / macOS app</text>
+    <text x="106" y="288" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="16">Calls aliases like "smart"</text>
 
-    <rect x="420" y="188" width="292" height="192" rx="20" fill="#162033" stroke="#4F80FF" stroke-width="2"/>
-    <text x="452" y="238" fill="#F8FAFC" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="26" font-weight="780">LiteLLMClient</text>
-    <text x="452" y="278" fill="#BFDBFE" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18">"smart" → Anthropic</text>
-    <text x="452" y="308" fill="#BFDBFE" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18">fallback → Gemini</text>
-    <text x="452" y="338" fill="#BFDBFE" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18">fallback → local Ollama</text>
+    <rect x="382" y="170" width="272" height="192" rx="16" fill="#162033" stroke="#4F80FF" stroke-width="2"/>
+    <text x="414" y="218" fill="#F8FAFC" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="25" font-weight="780">LiteLLMClient</text>
+    <text x="414" y="258" fill="#BFDBFE" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17">aliases</text>
+    <text x="414" y="287" fill="#BFDBFE" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17">retries</text>
+    <text x="414" y="316" fill="#BFDBFE" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17">fallback chains</text>
 
-    <rect x="816" y="86" width="332" height="88" rx="17" fill="#101827" stroke="#475569"/>
-    <text x="846" y="138" fill="#E2E8F0" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="700">OpenAI-compatible</text>
-    <text x="846" y="163" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="15">OpenRouter, LiteLLM, vLLM, LM Studio</text>
+    <rect x="736" y="170" width="250" height="192" rx="16" fill="#102235" stroke="#2DD4BF" stroke-width="2"/>
+    <text x="768" y="218" fill="#F8FAFC" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="25" font-weight="780">ChatProvider</text>
+    <text x="768" y="258" fill="#99F6E4" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17">public execution seam</text>
+    <text x="768" y="287" fill="#99F6E4" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17">HTTP or in-process</text>
+    <text x="768" y="316" fill="#99F6E4" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="17">normalized events</text>
 
-    <rect x="816" y="213" width="332" height="88" rx="17" fill="#101827" stroke="#475569"/>
-    <text x="846" y="265" fill="#E2E8F0" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="700">Anthropic</text>
-    <text x="846" y="290" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="15">Messages API transform</text>
+    <rect x="1038" y="78" width="166" height="96" rx="12" fill="#101827" stroke="#475569"/>
+    <text x="1062" y="118" fill="#E2E8F0" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="700">ProviderAdapter</text>
+    <text x="1062" y="147" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14">HTTP transform</text>
 
-    <rect x="816" y="340" width="332" height="88" rx="17" fill="#101827" stroke="#475569"/>
-    <text x="846" y="392" fill="#E2E8F0" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="700">Gemini</text>
-    <text x="846" y="417" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="15">GenerateContent transform</text>
+    <rect x="1038" y="205" width="166" height="96" rx="12" fill="#101827" stroke="#475569"/>
+    <text x="1062" y="245" fill="#E2E8F0" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="700">Built-ins</text>
+    <text x="1062" y="274" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14">OpenAI, Anthropic</text>
 
-    <rect x="816" y="467" width="332" height="88" rx="17" fill="#101827" stroke="#475569"/>
-    <text x="846" y="519" fill="#E2E8F0" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="700">Ollama</text>
-    <text x="846" y="544" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="15">local-first fallback</text>
+    <rect x="1038" y="332" width="166" height="96" rx="12" fill="#101827" stroke="#475569"/>
+    <text x="1062" y="372" fill="#E2E8F0" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18" font-weight="700">Local HTTP</text>
+    <text x="1062" y="401" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14">LM Studio, MLX server</text>
+
+    <rect x="736" y="452" width="468" height="86" rx="14" fill="#101827" stroke="#475569"/>
+    <text x="768" y="489" fill="#E2E8F0" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="20" font-weight="700">In-process local providers</text>
+    <text x="768" y="518" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="15">MLX bridge, Apple Foundation Models, custom runtimes</text>
   </g>
 
-  <path d="M322 284H399" stroke="#60A5FA" stroke-width="4" stroke-linecap="round"/>
-  <path d="M389 270L405 284L389 298" stroke="#60A5FA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M717 284C763 284 765 130 805 130" stroke="#60A5FA" stroke-width="3" stroke-linecap="round"/>
-  <path d="M717 284H805" stroke="#60A5FA" stroke-width="3" stroke-linecap="round"/>
-  <path d="M717 284C763 284 765 384 805 384" stroke="#60A5FA" stroke-width="3" stroke-linecap="round"/>
-  <path d="M717 284C763 284 765 511 805 511" stroke="#60A5FA" stroke-width="3" stroke-linecap="round"/>
+  <path d="M308 266H363" stroke="#60A5FA" stroke-width="4" stroke-linecap="round"/>
+  <path d="M353 252L369 266L353 280" stroke="#60A5FA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M660 266H717" stroke="#60A5FA" stroke-width="4" stroke-linecap="round"/>
+  <path d="M707 252L723 266L707 280" stroke="#60A5FA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M992 266C1016 266 1016 126 1030 126" stroke="#2DD4BF" stroke-width="3" stroke-linecap="round"/>
+  <path d="M992 266H1028" stroke="#2DD4BF" stroke-width="3" stroke-linecap="round"/>
+  <path d="M992 266C1016 266 1016 380 1030 380" stroke="#2DD4BF" stroke-width="3" stroke-linecap="round"/>
+  <path d="M861 368V442" stroke="#2DD4BF" stroke-width="3" stroke-linecap="round"/>
+  <path d="M847 432L861 448L875 432" stroke="#2DD4BF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <rect x="76" y="452" width="594" height="86" rx="16" fill="#0F172A" stroke="#26364F"/>
+  <rect x="76" y="452" width="580" height="86" rx="14" fill="#0F172A" stroke="#26364F"/>
   <text x="106" y="488" fill="#E2E8F0" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="17">try await llm.chat(model: "smart", messages: [.user("Hello")])</text>
-  <text x="106" y="518" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="16">Aliases, retries, fallbacks, streaming events, and LiteLLM-derived metadata.</text>
+  <text x="106" y="518" fill="#94A3B8" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="16">One normalized chat and streaming surface across cloud, local HTTP, and direct providers.</text>
 
   <defs>
-    <filter id="shadow" x="40" y="56" width="1144" height="535" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <filter id="shadow" x="40" y="48" width="1200" height="526" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
       <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity=".25"/>
     </filter>
   </defs>

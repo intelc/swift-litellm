@@ -68,3 +68,13 @@ extension Dictionary where Key == String, Value == JSONValue {
         }
     }
 }
+
+extension JSONValue {
+    var stringValue: String? {
+        if case let .string(value) = self {
+            value
+        } else {
+            nil
+        }
+    }
+}

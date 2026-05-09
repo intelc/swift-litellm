@@ -9,6 +9,7 @@ let package = Package(
     ],
     products: [
         .library(name: "LiteLLM", targets: ["LiteLLM"]),
+        .library(name: "LiteLLMLocalInference", targets: ["LiteLLMLocalInference"]),
     ],
     targets: [
         .target(
@@ -17,9 +18,13 @@ let package = Package(
                 .process("Resources"),
             ]
         ),
+        .target(
+            name: "LiteLLMLocalInference",
+            dependencies: ["LiteLLM"]
+        ),
         .testTarget(
             name: "LiteLLMTests",
-            dependencies: ["LiteLLM"],
+            dependencies: ["LiteLLM", "LiteLLMLocalInference"],
             resources: [
                 .process("Fixtures"),
             ]

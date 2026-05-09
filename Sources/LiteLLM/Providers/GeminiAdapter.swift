@@ -2,10 +2,14 @@ import Foundation
 
 struct GeminiAdapter: ProviderAdapter {
     let baseURL: URL
-    let apiKey: String
+    let apiKey: String?
     let model: String
 
     var providerName: String { "gemini" }
+
+    func withAPIKey(_ apiKey: String) -> any ProviderAdapter {
+        GeminiAdapter(baseURL: baseURL, apiKey: apiKey, model: model)
+    }
 
     func makeRequest(_ request: ChatRequest, stream: Bool) throws -> ProviderHTTPRequest {
         var body: [String: JSONValue] = [
@@ -29,6 +33,10 @@ struct GeminiAdapter: ProviderAdapter {
         if case .jsonObject? = request.responseFormat {
             generationConfig["response_mime_type"] = .string("application/json")
         }
+        if case let .jsonSchema(_, schema, _)? = request.responseFormat {
+            generationConfig["response_mime_type"] = .string("application/json")
+            generationConfig["response_schema"] = schema
+        }
         if !generationConfig.isEmpty {
             body["generation_config"] = .object(generationConfig)
         }
@@ -39,6 +47,9 @@ struct GeminiAdapter: ProviderAdapter {
         }
         body.mergeExtra(request.extraBody)
 
+        guard let apiKey, !apiKey.isEmpty else {
+            throw LiteLLMError.invalidRequest("Gemini API key is required")
+        }
         var headers = commonHeaders(extra: request.extraHeaders)
         headers["x-goog-api-key"] = apiKey
         let endpoint = stream ? "v1beta/models/\(model):streamGenerateContent" : "v1beta/models/\(model):generateContent"
@@ -69,8 +80,16 @@ struct GeminiAdapter: ProviderAdapter {
     }
 
     func parseStreamLine(_ line: String) throws -> [StreamEvent] {
-        guard let payload = ssePayload(from: line), payload.hasPrefix("{") else { return [] }
+        guard let payload = geminiStreamPayload(from: line) else { return [] }
+        if payload.hasPrefix("[") {
+            let envelopes = try JSONCoding.decoder.decode([GeminiEnvelope].self, from: Data(payload.utf8))
+            return envelopes.flatMap(events)
+        }
         let envelope = try JSONCoding.decoder.decode(GeminiEnvelope.self, from: Data(payload.utf8))
+        return events(from: envelope)
+    }
+
+    private func events(from envelope: GeminiEnvelope) -> [StreamEvent] {
         var events: [StreamEvent] = []
         for part in envelope.candidates.first?.content.parts ?? [] {
             if let text = part.text, !text.isEmpty {
@@ -88,9 +107,36 @@ struct GeminiAdapter: ProviderAdapter {
     }
 }
 
+private func geminiStreamPayload(from line: String) -> String? {
+    guard var payload = ssePayload(from: line) else { return nil }
+    payload = payload.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !payload.isEmpty, payload != "[" && payload != "]" else { return nil }
+    if payload.hasSuffix(",") {
+        payload.removeLast()
+        payload = payload.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    guard payload.hasPrefix("{") || payload.hasPrefix("[") else { return nil }
+    return payload
+}
+
 private func geminiContentJSON(_ message: LLMMessage) -> JSONValue {
     let role = message.role == .assistant ? "model" : "user"
     var parts: [JSONValue] = []
+    if message.role == .tool {
+        let response = (try? JSONDecoder().decode(JSONValue.self, from: Data(textFromContent(message.content).utf8)))
+            ?? .object(["content": .string(textFromContent(message.content))])
+        return .object([
+            "role": .string("user"),
+            "parts": .array([
+                .object([
+                    "function_response": .object([
+                        "name": .string(message.toolCallID ?? ""),
+                        "response": response,
+                    ]),
+                ]),
+            ]),
+        ])
+    }
     let text = textFromContent(message.content)
     if !text.isEmpty {
         parts.append(.object(["text": .string(text)]))
@@ -143,6 +189,6 @@ struct GeminiUsage: Decodable {
     let totalTokenCount: Int?
 
     func normalized() -> Usage {
-        Usage(promptTokens: promptTokenCount ?? 0, completionTokens: candidatesTokenCount ?? 0, totalTokens: totalTokenCount)
+        normalizedUsage(promptTokens: promptTokenCount, completionTokens: candidatesTokenCount, totalTokens: totalTokenCount)
     }
 }

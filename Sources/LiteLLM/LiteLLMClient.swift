@@ -1,21 +1,26 @@
 import Foundation
 
+public typealias APIKeyProvider = @Sendable (_ provider: Provider, _ alias: ModelAlias) throws -> String?
+
 public final class LiteLLMClient: Sendable {
     private let models: [ModelAlias: Provider]
     private let fallbackPolicy: FallbackPolicy
     private let retryPolicy: RetryPolicy
     private let transport: any HTTPTransport
+    private let apiKeyProvider: APIKeyProvider?
 
     public convenience init(
         models: [ModelAlias: Provider],
         fallbacks: [String: [String]] = [:],
-        retryPolicy: RetryPolicy = RetryPolicy()
+        retryPolicy: RetryPolicy = RetryPolicy(),
+        apiKeyProvider: APIKeyProvider? = nil
     ) {
         self.init(
             models: models,
             fallbackPolicy: FallbackPolicy(fallbacks),
             retryPolicy: retryPolicy,
-            transport: URLSessionHTTPTransport()
+            transport: URLSessionHTTPTransport(),
+            apiKeyProvider: apiKeyProvider
         )
     }
 
@@ -23,12 +28,14 @@ public final class LiteLLMClient: Sendable {
         models: [ModelAlias: Provider],
         fallbackPolicy: FallbackPolicy,
         retryPolicy: RetryPolicy,
-        transport: any HTTPTransport
+        transport: any HTTPTransport,
+        apiKeyProvider: APIKeyProvider? = nil
     ) {
         self.models = models
         self.fallbackPolicy = fallbackPolicy
         self.retryPolicy = retryPolicy
         self.transport = transport
+        self.apiKeyProvider = apiKeyProvider
     }
 
     public func chat(
@@ -76,6 +83,12 @@ public final class LiteLLMClient: Sendable {
         throw lastError ?? LiteLLMError.unknownModelAlias(alias)
     }
 
+    public func supports(_ capability: ModelCapability, model alias: ModelAlias) -> Bool {
+        guard let provider = models[alias] else { return false }
+        return ModelMetadata.supports(capability, model: provider.model)
+            || ModelMetadata.supports(capability, model: alias)
+    }
+
     public func streamChat(
         model alias: ModelAlias,
         messages: [LLMMessage],
@@ -103,7 +116,7 @@ public final class LiteLLMClient: Sendable {
     public func streamChat(model alias: ModelAlias, request: ChatRequest) throws -> AsyncThrowingStream<StreamEvent, Error> {
         let aliases = try route(for: alias)
         return AsyncThrowingStream { continuation in
-            Task {
+            let task = Task {
                 var lastError: LiteLLMError?
                 for routeAlias in aliases {
                     do {
@@ -126,24 +139,21 @@ public final class LiteLLMClient: Sendable {
                 }
                 continuation.finish(throwing: lastError ?? LiteLLMError.unknownModelAlias(alias))
             }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+            }
         }
     }
 
     private func executeChat(model alias: ModelAlias, request: ChatRequest) async throws -> ChatResponse {
-        let provider = try provider(for: alias)
-        let adapter = provider.adapter()
-        let providerRequest = try adapter.makeRequest(request, stream: false)
-        let httpRequest = try makeHTTPRequest(providerRequest)
+        let provider = try provider(for: alias, request: request)
+        let context = ProviderContext(transport: transport)
 
         var attempt = 0
         while true {
             if Task.isCancelled { throw LiteLLMError.cancelled }
             do {
-                let (data, response) = try await transport.data(for: httpRequest)
-                guard (200..<300).contains(response.statusCode) else {
-                    throw LiteLLMError.transport(statusCode: response.statusCode, body: String(data: data, encoding: .utf8) ?? "")
-                }
-                return try adapter.parseResponse(data: data)
+                return try await provider.chat(request, context: context)
             } catch {
                 let liteError = error.asLiteLLMError
                 guard attempt < retryPolicy.maxRetries, isRetryable(liteError) else {
@@ -155,22 +165,13 @@ public final class LiteLLMClient: Sendable {
     }
 
     private func executeStream(model alias: ModelAlias, request: ChatRequest, continuation: AsyncThrowingStream<StreamEvent, Error>.Continuation) async throws {
-        let provider = try provider(for: alias)
-        let adapter = provider.adapter()
-        let providerRequest = try adapter.makeRequest(request, stream: true)
-        let httpRequest = try makeHTTPRequest(providerRequest)
-        let (bytes, response) = try await transport.bytes(for: httpRequest)
-        guard (200..<300).contains(response.statusCode) else {
-            throw LiteLLMError.transport(statusCode: response.statusCode, body: "")
-        }
-
-        for try await line in bytes.lines {
+        let provider = try provider(for: alias, request: request)
+        let stream = provider.streamChat(request, context: ProviderContext(transport: transport))
+        for try await event in stream {
             if Task.isCancelled { throw LiteLLMError.cancelled }
-            for event in try adapter.parseStreamLine(line) {
-                continuation.yield(event)
-                if event == .done {
-                    return
-                }
+            continuation.yield(event)
+            if event == .done {
+                return
             }
         }
     }
@@ -189,13 +190,18 @@ public final class LiteLLMClient: Sendable {
         return provider
     }
 
-    private func makeHTTPRequest(_ providerRequest: ProviderHTTPRequest) throws -> HTTPRequest {
-        HTTPRequest(
-            url: providerRequest.url,
-            method: "POST",
-            headers: providerRequest.headers,
-            body: try JSONCoding.data(providerRequest.body)
-        )
+    private func provider(for alias: ModelAlias, request: ChatRequest) throws -> Provider {
+        let provider = try provider(for: alias)
+        if let override = request.providerOptions.apiKeyOverride {
+            return provider.withAPIKey(override)
+        }
+        guard provider.apiKey == nil, let apiKeyProvider else {
+            return provider
+        }
+        guard let apiKey = try apiKeyProvider(provider, alias), !apiKey.isEmpty else {
+            return provider
+        }
+        return provider.withAPIKey(apiKey)
     }
 
     private func isRetryable(_ error: LiteLLMError) -> Bool {
@@ -212,5 +218,13 @@ public final class LiteLLMClient: Sendable {
         case .unknownModelAlias, .invalidRequest, .decoding, .cancelled:
             false
         }
+    }
+}
+
+private extension Dictionary where Key == String, Value == JSONValue {
+    var apiKeyOverride: String? {
+        self["api_key"]?.stringValue
+            ?? self["apiKey"]?.stringValue
+            ?? self["credential"]?.stringValue
     }
 }
